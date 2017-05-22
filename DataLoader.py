@@ -79,14 +79,20 @@ class DataLoader(object):
             lower, upper = upper, lower
         return lower, upper
 
-    def merge_data( weather_data, climate_data ):
+    def merge_data( self, weather_data, climate_data ):
         '''Find way to merge data for climate and extreme weather events.
             Look back over proposal.'''
 
+        #Only allow events with SEVPROB & SEVERE values greater than 0
+
+        weather_data_splice = weather_data[(weather_data.sevprob > 0) & (weather_data.prob > 0)]
+
         #intersect weather data with climate data in terms of lat/lon
         #consider time range after climate anomaly
-        #want best representation of causal relationship
-        for index, row in weather_data.iterrows():
-            continue
+        #want best representation of relationship
+
+        for index, row in climate_data.iterrows():
+            for col, col_data in row.iteritems():
+                continue
 
         return weather_data, climate_data
