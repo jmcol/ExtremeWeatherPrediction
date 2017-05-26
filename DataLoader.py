@@ -82,11 +82,17 @@ class DataLoader(object):
 
     def merge_data( self, weather_data, climate_data ):
         #Only allow events with SEVPROB & SEVERE values greater than 0
-        weather_data_splice = weather_data[(weather_data.SEVPROB > 0) & (weather_data.PROB > 0)]
-        climate_data_splice = climate_data[(climate_data.lon_lower_range > weather_data.LON.min()) &
-           (climate_data.lon_upper_range < weather_data.LON.max()) &
-           (climate_data.lat_lower_range > weather_data.LON.min()) &
-           (climate_data.lat_upper_range < weather_data.LON.max())]
+        weather_data_splice = weather_data[
+            (weather_data.SEVPROB > 0) &
+            (weather_data.PROB > 0)
+        ]
+
+        climate_data_splice = climate_data[
+            (climate_data.lon_lower_range > weather_data.LON.min()) &
+            (climate_data.lon_upper_range < weather_data.LON.max()) &
+            (climate_data.lat_lower_range > weather_data.LON.min()) &
+            (climate_data.lat_upper_range < weather_data.LON.max())
+        ]
 
         #intersect weather data with climate data in terms of lat/lon
         #consider time range after climate anomaly
@@ -101,10 +107,12 @@ class DataLoader(object):
             monthly_events_df = weather_data_splice[monthly_events]
 
             # and whose range contain the weather event
-            events_in_range = monthly_events_df[(monthly_events_df.LAT > row['lat_lower_range'])
-                & (monthly_events_df.LAT < row['lat_upper_range'])
-                & (monthly_events_df.LON > row['lon_lower_range'])
-                & (monthly_events_df.LON < row['lon_upper_range'])]
+            events_in_range = monthly_events_df[
+                (monthly_events_df.LAT > row['lat_lower_range']) &
+                (monthly_events_df.LAT < row['lat_upper_range']) &
+                (monthly_events_df.LON > row['lon_lower_range']) &
+                (monthly_events_df.LON < row['lon_upper_range'])
+            ]
 
             #insert data into row somehow...
             if not events_in_range.empty:
