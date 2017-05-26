@@ -19,7 +19,7 @@ class DataLoader(object):
         lon_upper_ranges = []
         anomaly_values = []
 
-        x_splice = x[(x.year == 2014) & (x.year == 2015)]
+        x_splice = x[x.year == 2015]
 
         for index, row in x_splice.iterrows():
             #may be better way to do this than x^2 time
@@ -77,22 +77,37 @@ class DataLoader(object):
             #multiply values by -1 and switch min and max
             lower, upper = lower * -1 , upper * -1
             lower, upper = upper, lower
+
         return lower, upper
 
     def merge_data( self, weather_data, climate_data ):
-        '''Find way to merge data for climate and extreme weather events.
-            Look back over proposal.'''
-
         #Only allow events with SEVPROB & SEVERE values greater than 0
-
-        weather_data_splice = weather_data[(weather_data.sevprob > 0) & (weather_data.prob > 0)]
+        weather_data_splice = weather_data[(weather_data.SEVPROB > 0) & (weather_data.PROB > 0)]
+        climate_data_splice = climate_data[(climate_data.lon_lower_range > weather_data.LON.min()) &
+           (climate_data.lon_upper_range < weather_data.LON.max()) &
+           (climate_data.lat_lower_range > weather_data.LON.min()) &
+           (climate_data.lat_upper_range < weather_data.LON.max())]
 
         #intersect weather data with climate data in terms of lat/lon
         #consider time range after climate anomaly
         #want best representation of relationship
 
         for index, row in climate_data.iterrows():
-            for col, col_data in row.iteritems():
+
+            # select weather events that occurred within 30 days of anomaly
+            monthly_events = weather_data_splice['X.ZTIME']\
+                .apply(str).str.startswith('2.015' +
+                    str(int(row['month'])).zfill(2))
+            monthly_events_df = weather_data_splice[monthly_events]
+
+            # and whose range contain the weather event
+            events_in_range = monthly_events_df[(monthly_events_df.LAT > row['lat_lower_range'])
+                & (monthly_events_df.LAT < row['lat_upper_range'])
+                & (monthly_events_df.LON > row['lon_lower_range'])
+                & (monthly_events_df.LON < row['lon_upper_range'])]
+
+            #insert data into row somehow...
+            if not events_in_range.empty:
                 continue
 
         return weather_data, climate_data
