@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 
 class DataLoader(object):
 
@@ -92,6 +93,9 @@ class DataLoader(object):
         event_severe_prob = []
         event_max_size = []
 
+        if os.path.isfile('merged_data.csv'):
+            return pd.read_csv('merged_data.csv')
+
         #Only allow events with SEVPROB & SEVERE values greater than 0
         weather_data_splice = weather_data[
             (weather_data.SEVPROB > 0) &
@@ -155,5 +159,6 @@ class DataLoader(object):
             }
 
             final_df = pd.DataFrame(final_values)
+            final_df.to_csv('merged_data.csv')
 
         return final_df
