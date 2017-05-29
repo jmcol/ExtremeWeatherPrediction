@@ -81,12 +81,25 @@ class DataLoader(object):
         return lower, upper
 
     def merge_data( self, weather_data, climate_data ):
+        anomaly_year = []
+        anomaly_month = []
+        anomaly_value = []
+
+        event_lat = []
+        event_lon = []
+        event_time = []
+        event_prob = []
+        event_severe_prob = []
+        event_max_size = []
+
         #Only allow events with SEVPROB & SEVERE values greater than 0
         weather_data_splice = weather_data[
             (weather_data.SEVPROB > 0) &
             (weather_data.PROB > 0)
         ]
 
+        #Only take climate events which are in range of the
+        #weather event ranges
         climate_data_splice = climate_data[
             (climate_data.lon_lower_range > weather_data.LON.min()) &
             (climate_data.lon_upper_range < weather_data.LON.max()) &
@@ -98,7 +111,7 @@ class DataLoader(object):
         #consider time range after climate anomaly
         #want best representation of relationship
 
-        for index, row in climate_data.iterrows():
+        for index, row in climate_data_splice.iterrows():
 
             # select weather events that occurred within 30 days of anomaly
             monthly_events = weather_data_splice['X.ZTIME']\
@@ -116,6 +129,31 @@ class DataLoader(object):
 
             #insert data into row somehow...
             if not events_in_range.empty:
-                continue
+                for event_index, event_row in events_in_range.iterrows():
+                    anomaly_year.append(row['year'])
+                    anomaly_month.append(row['month'])
+                    anomaly_value.append(row['anomaly_value'])
 
-        return weather_data, climate_data
+                    event_lat.append(event_row['LAT'])
+                    event_lon.append(event_row['LON'])
+                    event_time.append(event_row['X.ZTIME'])
+                    event_prob.append(event_row['PROB'])
+                    event_severe_prob.append(event_row['SEVPROB'])
+                    event_max_size.append(event_row['MAXSIZE'])
+
+            final_values = {
+                pd.Series(anomaly_year),
+                pd.Series(anomaly_month),
+                pd.Series(anomaly_value),
+
+                pd.Series(event_lat),
+                pd.Series(event_lon),
+                pd.Series(event_time),
+                pd.Series(event_prob),
+                pd.Series(event_severe_prob),
+                pd.Series(event_max_size)
+            }
+
+            final_df = pd.DataFrame(final_values)
+
+        return final_df
