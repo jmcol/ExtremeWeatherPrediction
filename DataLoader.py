@@ -82,6 +82,8 @@ class DataLoader(object):
         return lower, upper
 
     def merge_data( self, weather_data, climate_data ):
+        final_df = None
+
         anomaly_year = []
         anomaly_month = []
         anomaly_value = []
@@ -131,7 +133,6 @@ class DataLoader(object):
                 (monthly_events_df.LON < row['lon_upper_range'])
             ]
 
-            #insert data into row somehow...
             if not events_in_range.empty:
                 for event_index, event_row in events_in_range.iterrows():
                     anomaly_year.append(row['year'])
@@ -145,20 +146,20 @@ class DataLoader(object):
                     event_severe_prob.append(event_row['SEVPROB'])
                     event_max_size.append(event_row['MAXSIZE'])
 
-            final_values = {
-                pd.Series(anomaly_year),
-                pd.Series(anomaly_month),
-                pd.Series(anomaly_value),
+        final_values = {
+            pd.Series(anomaly_year),
+            pd.Series(anomaly_month),
+            pd.Series(anomaly_value),
 
-                pd.Series(event_lat),
-                pd.Series(event_lon),
-                pd.Series(event_time),
-                pd.Series(event_prob),
-                pd.Series(event_severe_prob),
-                pd.Series(event_max_size)
-            }
+            pd.Series(event_lat),
+            pd.Series(event_lon),
+            pd.Series(event_time),
+            pd.Series(event_prob),
+            pd.Series(event_severe_prob),
+            pd.Series(event_max_size)
+        }
 
-            final_df = pd.DataFrame(final_values)
-            final_df.to_csv('merged_data.csv')
+        final_df = pd.DataFrame(final_values)
+        final_df.to_csv('merged_data.csv')
 
         return final_df
