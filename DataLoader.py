@@ -147,16 +147,16 @@ class DataLoader(object):
                     event_max_size.append(event_row['MAXSIZE'])
 
         final_values = {
-            pd.Series(anomaly_year),
-            pd.Series(anomaly_month),
-            pd.Series(anomaly_value),
+            'anomaly_year': pd.Series(anomaly_year),
+            'anomaly_month': pd.Series(anomaly_month),
+            'anomaly_value': pd.Series(anomaly_value),
 
-            pd.Series(event_lat),
-            pd.Series(event_lon),
-            pd.Series(event_time),
-            pd.Series(event_prob),
-            pd.Series(event_severe_prob),
-            pd.Series(event_max_size)
+            'event_lat': pd.Series(event_lat),
+            'event_lon': pd.Series(event_lon),
+            'event_time': pd.Series(event_time),
+            'event_prob': pd.Series(event_prob),
+            'event_severe_prob': pd.Series(event_severe_prob),
+            'event_max_size': pd.Series(event_max_size)
         }
 
         final_df = pd.DataFrame(final_values)
