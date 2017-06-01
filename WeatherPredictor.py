@@ -13,11 +13,12 @@ class WeatherPredictor( object ):
         weather_data = self.data_loader.load_weather_data()
         merged_data = self.data_loader.merge_data(weather_data, climate_data)
 
-        event_features = merged_data[:-1]
-        geo_location_labels = merged_data[-1]
+        merged_data.drop(merged_data.columns[0], axis=1, inplace=True)
+        anomaly_features = merged_data[['anomaly_month', 'anomaly_value']]
+        event_labels = merged_data[['event_prob', 'event_severe_prob', 'event_max_size']]
 
-        X_train, X_test, y_train, y_test = train_test_split(event_features, geo_location_labels,
-                                                            test_size=0.25, random_state=487)
+        X_train, X_test, y_train, y_test = train_test_split(anomaly_features, event_labels,
+            test_size=0.25, random_state=42)
 
         self.regressor.fit(X_train, y_train)
         print "Training score:" + " " + self.regressor.score(X_train, y_train)
