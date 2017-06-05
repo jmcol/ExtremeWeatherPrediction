@@ -1,7 +1,9 @@
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from DataLoader import DataLoader
-from pandas.tools.plotting import scatter_matrix
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor
+import pandas as pd
 
 import numpy
 import matplotlib.pyplot as plt
@@ -16,7 +18,7 @@ class WeatherPredictor( object ):
         self.merged_data.hist()
         plt.show()
 
-        scatter_matrix(self.merged_data.sample(n=1000))
+        pd.scatter_matrix(self.merged_data.sample(n=1000))
         plt.show()
 
         data = self.merged_data.sample(n=1000)
@@ -39,6 +41,8 @@ class WeatherPredictor( object ):
         weather_data = self.data_loader.load_weather_data()
         self.merged_data = self.data_loader.merge_data(weather_data, climate_data)
         self.merged_data.drop(self.merged_data.columns[0], axis=1, inplace=True)
+        self.merged_data.drop( 'anomaly_year', axis=1 )
+        test_df = self.data_loader.preprocess_merged_data( self.merged_data.iloc[0:1000] )
 
     def train_predict( self ):
         anomaly_features = self.merged_data[['anomaly_month', 'anomaly_value', 'event_lat', 'event_lon']]
@@ -54,20 +58,33 @@ class WeatherPredictor( object ):
 
 if __name__ == '__main__':
     BENCHMARKS = False
+    VISUALS = False
 
     dl = DataLoader()
     reg = MLPRegressor(hidden_layer_sizes=(100, 75),activation='logistic', learning_rate='adaptive', max_iter=5000,
         shuffle=True, random_state=24)
 
     if BENCHMARKS:
+        rng = numpy.random.RandomState(1)
+
         #Benchmark with default MLP regression
-        benchmark_reg = MLPRegressor()
-        wp_benchmark = WeatherPredictor( benchmark_reg, dl )
+        benchmark_reg1 = MLPRegressor()
+        wp_benchmark = WeatherPredictor( benchmark_reg1, dl )
         wp_benchmark.load_data()
-        wp_benchmark.visualize_data()
+
+        benchmark_reg2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4, ), n_estimators=500, random_state=rng)
+        wp_benchmark2 = WeatherPredictor( benchmark_reg2, dl )
+        wp_benchmark2.load_data()
+
+        if VISUALS:
+            wp_benchmark.visualize_data()
+
         wp_benchmark.train_predict()
+        wp_benchmark2.train_predict()
 
     wp = WeatherPredictor( reg, dl )
     wp.load_data()
-    wp.visualize_data()
+    if VISUALS:
+        wp.visualize_data()
+
     wp.train_predict()

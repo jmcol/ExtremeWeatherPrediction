@@ -4,11 +4,18 @@ import os
 class DataLoader(object):
 
     def load_weather_data ( self ):
+        if not os.path.isfile('hail-2015.csv'):
+            return None
+
         return pd.read_csv( 'hail-2015.csv' )
 
     def load_climate_data( self ):
+        if not os.path.isfile('ghcn-m-v1.csv'):
+            return None
+
         data = pd.read_csv( 'ghcn-m-v1.csv' )
         processed_data = self.preprocess_climate_data( data )
+
         return processed_data
 
     def preprocess_climate_data( self, x ):
@@ -95,7 +102,7 @@ class DataLoader(object):
         event_severe_prob = []
         event_max_size = []
 
-        if os.path.isfile('merged_data.csv'):
+        if os.path.isfile('merged_data.csv') or weather_data == None or climate_data == None:
             return pd.read_csv('merged_data.csv')
 
         #Only allow events with SEVPROB & SEVERE values greater than 0
@@ -163,3 +170,17 @@ class DataLoader(object):
         final_df.to_csv('merged_data.csv')
 
         return final_df
+
+    def preprocess_merged_data( self, X ):
+        output = pd.DataFrame(index=X.index)
+
+        # Investigate each feature column for the data
+        for col, col_data in X.iteritems():
+
+            if col_data.dtype == object:
+                col_data = pd.get_dummies(col_data, prefix=col)
+
+                # Collect the revised columns
+            output = output.join(col_data)
+
+        return output
