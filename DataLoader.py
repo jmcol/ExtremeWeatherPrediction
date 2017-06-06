@@ -174,13 +174,14 @@ class DataLoader(object):
     def preprocess_merged_data( self, X ):
         output = pd.DataFrame(index=X.index)
 
-        # Investigate each feature column for the data
+        #Descrete values for event lat and lon range
         for col, col_data in X.iteritems():
-
             if col_data.dtype == object:
                 col_data = pd.get_dummies(col_data, prefix=col)
 
-                # Collect the revised columns
             output = output.join(col_data)
+
+        output.drop(output.columns[0], axis=1, inplace=True)
+        output.drop('anomaly_year', axis=1)
 
         return output

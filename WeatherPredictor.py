@@ -40,9 +40,7 @@ class WeatherPredictor( object ):
         climate_data = self.data_loader.load_climate_data()
         weather_data = self.data_loader.load_weather_data()
         self.merged_data = self.data_loader.merge_data(weather_data, climate_data)
-        self.merged_data.drop(self.merged_data.columns[0], axis=1, inplace=True)
-        self.merged_data.drop( 'anomaly_year', axis=1 )
-        test_df = self.data_loader.preprocess_merged_data( self.merged_data.iloc[0:1000] )
+        self.merged_data = self.data_loader.preprocess_merged_data( self.merged_data )
 
     def train_predict( self ):
         anomaly_features = self.merged_data[['anomaly_month', 'anomaly_value', 'event_lat', 'event_lon']]
