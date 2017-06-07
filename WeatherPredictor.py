@@ -3,8 +3,8 @@ from sklearn.model_selection import train_test_split
 from DataLoader import DataLoader
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import AdaBoostRegressor
-import pandas as pd
 
+import pandas as pd
 import numpy
 import matplotlib.pyplot as plt
 
@@ -82,6 +82,7 @@ if __name__ == '__main__':
 
     wp = WeatherPredictor( reg, dl )
     wp.load_data()
+
     if VISUALS:
         wp.visualize_data()
 
