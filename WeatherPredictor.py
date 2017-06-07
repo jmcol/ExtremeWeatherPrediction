@@ -43,7 +43,7 @@ class WeatherPredictor( object ):
         self.merged_data = self.data_loader.preprocess_merged_data( self.merged_data )
 
     def train_predict( self ):
-        anomaly_features = self.merged_data[['anomaly_month', 'anomaly_value', 'event_lat', 'event_lon']]
+        anomaly_features = self.merged_data.drop('event_prob', axis=1)
         event_labels = self.merged_data[['event_prob']]
 
         X_train, X_test, y_train, y_test = train_test_split(anomaly_features, event_labels,

@@ -172,28 +172,23 @@ class DataLoader(object):
 
         return final_df
 
-    def generate_lat_lon_ranges(self, X):
-        for col, col_data in X.iteritems():
-            if col == 'event_lat' or col == 'event_lon':
-                lower = (col_data - (col_data % 5)).astype(int)
-                upper = 5 * round(col_data / 5)
+    @staticmethod
+    def preprocess_merged_data(X):
+        degree_range = lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5)))
 
-                range_str = "{}-{}".format(lower, upper)
+        X.event_lat = X['event_lat'].map(degree_range)
+        X.event_lon = X['event_lon'].map(degree_range)
 
-                col_data.replace(col_data, range_str)
-
-    def preprocess_merged_data( self, X ):
-        #output = pd.DataFrame(index=X.index)
-
-        '''#Descrete values for event lat and lon range
-        for col, col_data in X.iteritems():
-            if col_data.dtype == object:
-                col_data = pd.get_dummies(col_data, prefix=col)
-
-            output = output.join(col_data)'''
-
-        self.generate_lat_lon_ranges(X)
         X.drop(X.columns[0], axis=1, inplace=True)
         X.drop('anomaly_year', axis=1)
 
-        #return output
+        output = pd.DataFrame(index=X.index)
+
+        #Descrete values for event lat and lon range
+        for col, col_data in X.iteritems():
+            if col == 'event_lat' or col == 'event_lon':
+                col_data = pd.get_dummies(col_data, prefix=col)
+
+            output = output.join(col_data)
+
+        return output
