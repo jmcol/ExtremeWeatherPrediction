@@ -49,7 +49,7 @@ class WeatherPredictor( object ):
         X_train, X_test, y_train, y_test = train_test_split(anomaly_features, event_labels,
             test_size=0.25, random_state=42)
 
-        self.regressor.fit(X_train, y_train.values.ravel())
+        self.regressor.fit(X_train, y_train)
         print "Training score:" + " " + self.regressor.score(X_train, y_train)
         print "Testing score:" + " " + self.regressor.score(X_test, y_test)
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     VISUALS = False
 
     dl = DataLoader()
-    reg = MLPRegressor(hidden_layer_sizes=(100, 75),activation='logistic', learning_rate='adaptive', max_iter=5000,
+    reg = MLPRegressor(hidden_layer_sizes=(100, 75),activation='logistic', learning_rate='adaptive', max_iter=10000,
         shuffle=True, random_state=24)
 
     if BENCHMARKS:

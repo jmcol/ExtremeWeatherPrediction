@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 import math
 
 class DataLoader(object):
@@ -180,7 +181,7 @@ class DataLoader(object):
         X.event_lon = X['event_lon'].map(degree_range)
 
         X.drop(X.columns[0], axis=1, inplace=True)
-        X.drop(['anomaly_year', 'anomaly_month', 'anomaly_year', 'event_time', 'event_max_size'], axis=1, inplace=True)
+        X.drop(['anomaly_year', 'event_time', 'event_max_size'], axis=1, inplace=True)
 
         lon_temp = pd.get_dummies(X.event_lon, 'event_lon')
         X.drop('event_lon', axis=1, inplace=True)
@@ -190,4 +191,12 @@ class DataLoader(object):
         X.drop('event_lat', axis=1, inplace=True)
         X = X.join(lat_temp)
 
-        return X
+        X.anomaly_value.apply(np.log)
+
+        Q1 = np.percentile(X.anomaly_value, 25)
+        Q3 = np.percentile(X.anomaly_value, 75)
+        step = (Q3 - Q1) * 1.5
+
+        X_good = X[(X['anomaly_value'] >= Q1 - step) & (X['anomaly_value'] <= Q3 + step)]
+
+        return X_good
