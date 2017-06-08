@@ -180,15 +180,14 @@ class DataLoader(object):
         X.event_lon = X['event_lon'].map(degree_range)
 
         X.drop(X.columns[0], axis=1, inplace=True)
-        X.drop('anomaly_year', axis=1)
+        X.drop(['anomaly_year', 'anomaly_month', 'anomaly_year', 'event_time', 'event_max_size'], axis=1, inplace=True)
 
-        output = pd.DataFrame(index=X.index)
+        lon_temp = pd.get_dummies(X.event_lon, 'event_lon')
+        X.drop('event_lon', axis=1, inplace=True)
+        X = X.join(lon_temp)
 
-        #Descrete values for event lat and lon range
-        for col, col_data in X.iteritems():
-            if col == 'event_lat' or col == 'event_lon':
-                col_data = pd.get_dummies(col_data, prefix=col)
+        lat_temp = pd.get_dummies(X.event_lat, 'event_lat')
+        X.drop('event_lat', axis=1, inplace=True)
+        X = X.join(lat_temp)
 
-            output = output.join(col_data)
-
-        return output
+        return X
