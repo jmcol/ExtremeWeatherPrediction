@@ -108,10 +108,10 @@ class DataLoader(object):
             return pd.read_csv('merged_data.csv')
 
         #Only allow events with SEVPROB & SEVERE values greater than 0
-        weather_data_splice = weather_data[
-            (weather_data.SEVPROB > 0) &
-            (weather_data.PROB > 0)
-        ]
+        # weather_data_splice = weather_data[
+        #     (weather_data.SEVPROB > 0) &
+        #     (weather_data.PROB > 0)
+        # ]
 
         #Only take climate events which are in range of the
         #weather event ranges
@@ -129,10 +129,10 @@ class DataLoader(object):
         for index, row in climate_data_splice.iterrows():
 
             # select weather events that occurred within 30 days of anomaly
-            monthly_events = weather_data_splice['X.ZTIME']\
+            monthly_events = weather_data['X.ZTIME']\
                 .apply(str).str.startswith('2.015' +
                     str(int(row['month'])).zfill(2))
-            monthly_events_df = weather_data_splice[monthly_events]
+            monthly_events_df = weather_data[monthly_events]
 
             # and whose range contain the weather event
             events_in_range = monthly_events_df[
@@ -176,6 +176,11 @@ class DataLoader(object):
     @staticmethod
     def preprocess_merged_data(X):
         degree_range = lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5)))
+        scalar_event_occurrence = lambda x: 1 if x > 0.7 else 0
+        scalar_severe_event_occurrence = lambda x: 1 if x > 0.7 else 0
+
+        X.event_prob = X['event_prob'].map(scalar_event_occurrence)
+        X.event_sever_prob = X['event_severe_prob'].map(scalar_severe_event_occurrence)
 
         X.event_lat = X['event_lat'].map(degree_range)
         X.event_lon = X['event_lon'].map(degree_range)
@@ -191,7 +196,7 @@ class DataLoader(object):
         X.drop('event_lat', axis=1, inplace=True)
         X = X.join(lat_temp)
 
-        X.anomaly_value.apply(np.log)
+        X.anomaly_value = X.anomaly_value.apply(np.log)
 
         Q1 = np.percentile(X.anomaly_value, 25)
         Q3 = np.percentile(X.anomaly_value, 75)
