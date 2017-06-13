@@ -104,14 +104,8 @@ class DataLoader(object):
         event_severe_prob = []
         event_max_size = []
 
-        if os.path.isfile('merged_data.csv') or weather_data == None or climate_data == None:
+        if os.path.isfile('merged_data.csv') or weather_data.empty or climate_data.empty:
             return pd.read_csv('merged_data.csv')
-
-        #Only allow events with SEVPROB & SEVERE values greater than 0
-        # weather_data_splice = weather_data[
-        #     (weather_data.SEVPROB > 0) &
-        #     (weather_data.PROB > 0)
-        # ]
 
         #Only take climate events which are in range of the
         #weather event ranges
@@ -132,6 +126,7 @@ class DataLoader(object):
             monthly_events = weather_data['X.ZTIME']\
                 .apply(str).str.startswith('2.015' +
                     str(int(row['month'])).zfill(2))
+
             monthly_events_df = weather_data[monthly_events]
 
             # and whose range contain the weather event
@@ -155,6 +150,8 @@ class DataLoader(object):
                     event_severe_prob.append(event_row['SEVPROB'])
                     event_max_size.append(event_row['MAXSIZE'])
 
+                break
+
         final_values = {
             'anomaly_year': pd.Series(anomaly_year),
             'anomaly_month': pd.Series(anomaly_month),
@@ -173,14 +170,13 @@ class DataLoader(object):
 
         return final_df
 
-    @staticmethod
-    def preprocess_merged_data(X):
+    def preprocess_merged_data( self, X ):
         degree_range = lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5)))
-        scalar_event_occurrence = lambda x: 1 if x > 0.7 else 0
-        scalar_severe_event_occurrence = lambda x: 1 if x > 0.7 else 0
+        scalar_event_occurrence = lambda x: 1 if x > 70 else 0
+        scalar_severe_event_occurrence = lambda x: 1 if x > 70 else 0
 
         X.event_prob = X['event_prob'].map(scalar_event_occurrence)
-        X.event_sever_prob = X['event_severe_prob'].map(scalar_severe_event_occurrence)
+        X.event_severe_prob = X['event_severe_prob'].map(scalar_severe_event_occurrence)
 
         X.event_lat = X['event_lat'].map(degree_range)
         X.event_lon = X['event_lon'].map(degree_range)
@@ -198,10 +194,6 @@ class DataLoader(object):
 
         X.anomaly_value = X.anomaly_value.apply(np.log)
 
-        Q1 = np.percentile(X.anomaly_value, 25)
-        Q3 = np.percentile(X.anomaly_value, 75)
-        step = (Q3 - Q1) * 1.5
+        legit = X.replace([np.inf, -np.inf], np.nan).dropna()
 
-        X_good = X[(X['anomaly_value'] >= Q1 - step) & (X['anomaly_value'] <= Q3 + step)]
-
-        return X_good
+        return legit

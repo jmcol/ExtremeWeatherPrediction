@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from DataLoader import DataLoader
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import AdaBoostRegressor
+from sklearn.linear_model import SGDClassifier
 
 import pandas as pd
 import numpy
@@ -80,7 +81,8 @@ if __name__ == '__main__':
         wp_benchmark.train_predict()
         wp_benchmark2.train_predict()
 
-    wp = WeatherPredictor( reg, dl )
+    clf = SGDClassifier(alpha=0.001, n_iter=100)
+    wp = WeatherPredictor( clf, dl )
     wp.load_data()
 
     if VISUALS:
