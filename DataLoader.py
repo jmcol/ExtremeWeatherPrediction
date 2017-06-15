@@ -166,7 +166,7 @@ class DataLoader(object):
         }
 
         final_df = pd.DataFrame(final_values)
-        final_df.to_csv('merged_data.csv')
+        final_df.to_csv('merged_data_test.csv')
 
         return final_df
 
