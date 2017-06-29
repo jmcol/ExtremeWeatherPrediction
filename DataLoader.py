@@ -182,7 +182,7 @@ class DataLoader(object):
         X.event_lon = X['event_lon'].map(degree_range)
 
         X.drop(X.columns[0], axis=1, inplace=True)
-        X.drop(['anomaly_year', 'event_time', 'event_max_size'], axis=1, inplace=True)
+        X.drop(['anomaly_year', 'event_time', 'event_max_size', 'event_severe_prob'], axis=1, inplace=True)
 
         lon_temp = pd.get_dummies(X.event_lon, 'event_lon')
         X.drop('event_lon', axis=1, inplace=True)

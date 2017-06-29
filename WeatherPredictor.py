@@ -1,12 +1,12 @@
-from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from DataLoader import DataLoader
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import AdaBoostRegressor
 from sklearn.linear_model import SGDClassifier
+from sklearn.svm import LinearSVC
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import RobustScaler
 
 import pandas as pd
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
 
 class WeatherPredictor( object ):
@@ -30,7 +30,7 @@ class WeatherPredictor( object ):
         ax = fig.add_subplot(111)
         cax = ax.matshow(correlations, vmin=-1, vmax=1)
         fig.colorbar(cax)
-        ticks = numpy.arange(0, 9, 1)
+        ticks = np.arange(0, 9, 1)
         ax.set_xticks(ticks)
         ax.set_yticks(ticks)
         ax.set_xticklabels(names)
@@ -45,14 +45,18 @@ class WeatherPredictor( object ):
 
     def train_predict( self ):
         event_labels = self.merged_data[['event_prob']]
-        anomaly_features = self.merged_data.drop(['event_prob', 'event_severe_prob'], axis=1)
+        anomaly_features = self.merged_data.drop(['event_prob'], axis=1)
 
         X_train, X_test, y_train, y_test = train_test_split(anomaly_features, event_labels,
             test_size=0.25, random_state=42)
 
-        self.regressor.fit(X_train, y_train)
-        print "Training score:" + " " + self.regressor.score(X_train, y_train)
-        print "Testing score:" + " " + self.regressor.score(X_test, y_test)
+        robust_scaler = RobustScaler()
+        Xtr_r = robust_scaler.fit_transform(X_train)
+        Xte_r = robust_scaler.transform(X_test)
+
+        self.regressor.fit(Xtr_r, y_train.values.ravel())
+        print "Training score:" + " " + self.regressor.score(Xtr_r, y_train)
+        print "Testing score:" + " " + self.regressor.score(Xte_r, y_test)
 
 
 if __name__ == '__main__':
@@ -60,28 +64,26 @@ if __name__ == '__main__':
     VISUALS = False
 
     dl = DataLoader()
-    reg = MLPRegressor(hidden_layer_sizes=(100, 75),activation='logistic', learning_rate='adaptive', max_iter=10000,
-        shuffle=True, random_state=24)
 
     if BENCHMARKS:
-        rng = numpy.random.RandomState(1)
+        rng = np.random.RandomState(1)
 
         #Benchmark with default MLP regression
-        benchmark_reg1 = MLPRegressor()
+        benchmark_reg1 = LinearSVC()
         wp_benchmark = WeatherPredictor( benchmark_reg1, dl )
         wp_benchmark.load_data()
-
-        benchmark_reg2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4, ), n_estimators=500, random_state=rng)
-        wp_benchmark2 = WeatherPredictor( benchmark_reg2, dl )
-        wp_benchmark2.load_data()
 
         if VISUALS:
             wp_benchmark.visualize_data()
 
         wp_benchmark.train_predict()
-        wp_benchmark2.train_predict()
 
-    clf = SGDClassifier(alpha=0.001, n_iter=100)
+    tuned_parameters = [{'loss': ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron'],
+                         'penalty': ['none', 'l2', 'l1', 'elasticnet'],
+                         'alpha': 10.0**-np.arange(1,7)}]
+
+    clf = SGDClassifier(alpha=0.0001,loss='log',penalty='none',fit_intercept=True,
+                        shuffle=True,random_state=42,n_jobs=-1,n_iter=2)
     wp = WeatherPredictor( clf, dl )
     wp.load_data()
 
