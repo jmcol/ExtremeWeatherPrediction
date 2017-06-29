@@ -15,16 +15,16 @@ class WeatherPredictor( object ):
         self.regressor = regressor
         self.data_loader = data_loader
 
-    def visualize_data( self ):
-        self.merged_data.hist()
+    def visualize_data( self, data ):
+        data.hist()
         plt.show()
 
-        pd.scatter_matrix(self.merged_data.sample(n=1000))
+        pd.scatter_matrix(data.sample(n=1000))
         plt.show()
 
-        data = self.merged_data.sample(n=1000)
-        names = list(self.merged_data.columns.values)
-        correlations = data.corr()
+        data1 = data.sample(n=1000)
+        names = list(data.columns.values)
+        correlations = data1.corr()
         # plot correlation matrix
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -38,9 +38,9 @@ class WeatherPredictor( object ):
         plt.show()
         
     def load_data( self ):
-        climate_data = self.data_loader.load_climate_data()
-        weather_data = self.data_loader.load_weather_data()
-        self.merged_data = self.data_loader.merge_data(weather_data, climate_data)
+        self.climate_data = self.data_loader.load_climate_data()
+        self.weather_data = self.data_loader.load_weather_data()
+        self.merged_data = self.data_loader.merge_data(self.weather_data, self.climate_data)
         self.merged_data = self.data_loader.preprocess_merged_data( self.merged_data )
 
     def train_predict( self ):
@@ -61,7 +61,7 @@ class WeatherPredictor( object ):
 
 if __name__ == '__main__':
     BENCHMARKS = False
-    VISUALS = False
+    VISUALS = True
 
     dl = DataLoader()
 
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     wp.load_data()
 
     if VISUALS:
-        wp.visualize_data()
+        wp.visualize_data( wp.merged_data )
+        wp.visualize_data( wp.weather_data )
 
     wp.train_predict()
