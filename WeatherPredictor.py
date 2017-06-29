@@ -61,7 +61,7 @@ class WeatherPredictor( object ):
 
 if __name__ == '__main__':
     BENCHMARKS = False
-    VISUALS = True
+    VISUALS = False
 
     dl = DataLoader()
 
