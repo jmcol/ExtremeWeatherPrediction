@@ -193,3 +193,18 @@ class DataLoader(object):
         # anomaly_table.anomaly_value = anomaly_table.anomaly_value.apply(np.log)
         legit = anomaly_table.replace([np.inf, -np.inf], np.nan).dropna()
         return legit
+
+    @staticmethod
+    def preprocess_merged_data_mlp(anomaly_table):
+        anomaly_table.event_prob = anomaly_table \
+            .apply(lambda x: int(x['event_prob'] > 70 or x['event_severe_prob'] > 30), axis=1)
+
+        anomaly_table.event_lat = anomaly_table['event_lat'] \
+            .map(lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5))))
+        anomaly_table.event_lon = anomaly_table['event_lon'] \
+            .map(lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5))))
+
+        anomaly_table.drop(anomaly_table.columns[0], axis=1, inplace=True)
+        anomaly_table.drop(['anomaly_year', 'event_severe_prob'], axis=1, inplace=True)
+
+        return anomaly_table

@@ -65,7 +65,8 @@ class WeatherPredictor(object):
         self.climate_data = None
         self.weather_data = None
         self.merged_data = None
-        self.merged_data = None
+        self.merged_data_sgd = None
+        self.merged_data_mlp = None
 
     @staticmethod
     def visualize_data(data):
@@ -94,18 +95,35 @@ class WeatherPredictor(object):
         self.climate_data = self.data_loader.load_climate_data()
         self.weather_data = self.data_loader.load_weather_data()
         self.merged_data = self.data_loader.merge_data(self.weather_data, self.climate_data)
-        self.merged_data = self.data_loader.preprocess_merged_data(self.merged_data)
+        self.merged_data_sgd = self.data_loader.preprocess_merged_data(self.merged_data)
+        # self.merged_data_mlp = self.data_loader.preprocess_merged_data_mlp(self.merged_data)
 
     def train_predict(self):
-        scaler = MinMaxScaler()
-        event_labels = self.merged_data[['event_prob']]
-        anomaly_features = self.merged_data.drop(['event_prob'], axis=1)
+        event_labels = self.merged_data_sgd[['event_prob']]
+        anomaly_features = self.merged_data_sgd.drop(['event_prob'], axis=1)
 
         x_train, x_test, y_train, y_test = train_test_split(anomaly_features,
                                                             event_labels,
                                                             test_size=0.25, 
                                                             random_state=42)
 
+        robust_scaler = RobustScaler()
+        xtr_r = robust_scaler.fit_transform(x_train)
+        xte_r = robust_scaler.transform(x_test)
+        self.regressor.fit(xtr_r, y_train.values.ravel())
+
+        print("Training score:" + " " + str(self.regressor.score(xtr_r, y_train)))
+        print("Testing score:" + " " + str(self.regressor.score(xte_r, y_test)))
+
+    def train_predict_mlp(self):
+        event_labels = self.merged_data_mlp[['event_prob']]
+        anomaly_features = self.merged_data_mlp.drop(['event_prob'], axis=1)
+
+        x_train, x_test, y_train, y_test = train_test_split(anomaly_features,
+                                                            event_labels,
+                                                            test_size=0.25,
+                                                            random_state=42)
+        scaler = MinMaxScaler()
         scaler.fit(x_train)
         x_tr = scaler.transform(x_train)
         x_te = scaler.transform(x_test)
@@ -124,14 +142,6 @@ class WeatherPredictor(object):
         print("Training set loss: %f" % mlp.loss_)
         print("Training set layers: %f" % mlp.n_layers_)
         print("Training set hidden layer sizes: %f" % mlp.hidden_layer_sizes)
-
-        robust_scaler = RobustScaler()
-        xtr_r = robust_scaler.fit_transform(x_train)
-        xte_r = robust_scaler.transform(x_test)
-        self.regressor.fit(xtr_r, y_train.values.ravel())
-
-        print("Training score:" + " " + str(self.regressor.score(xtr_r, y_train)))
-        print("Testing score:" + " " + str(self.regressor.score(xte_r, y_test)))
 
 
 if __name__ == '__main__':
@@ -163,7 +173,8 @@ if __name__ == '__main__':
     wp.load_data()
 
     if VISUALS:
-        wp.visualize_data(wp.merged_data)
+        wp.visualize_data(wp.merged_data_sgd)
         wp.visualize_data(wp.weather_data)
 
     wp.train_predict()
+    # wp.train_predict_mlp()
