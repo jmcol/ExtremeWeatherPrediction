@@ -169,30 +169,27 @@ class DataLoader(object):
 
         return final_df
 
-    def preprocess_merged_data( self, X ):
-        degree_range = lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5)))
-        scalar_event_occurrence = lambda x: 1 if x > 70 else 0
-        scalar_severe_event_occurrence = lambda x: 1 if x > 70 else 0
+    @staticmethod
+    def preprocess_merged_data(anomaly_table):
+        anomaly_table.event_prob = anomaly_table\
+            .apply(lambda x: int(x['event_prob'] > 70 or x['event_severe_prob'] > 30), axis=1)
 
-        X.event_prob = X['event_prob'].map(scalar_event_occurrence)
-        X.event_severe_prob = X['event_severe_prob'].map(scalar_severe_event_occurrence)
+        anomaly_table.event_lat = anomaly_table['event_lat']\
+            .map(lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5))))
+        anomaly_table.event_lon = anomaly_table['event_lon']\
+            .map(lambda x: "{}_{}".format(int(x - (x % 5)), int((x - (x % 5) + 5))))
 
-        X.event_lat = X['event_lat'].map(degree_range)
-        X.event_lon = X['event_lon'].map(degree_range)
+        anomaly_table.drop(anomaly_table.columns[0], axis=1, inplace=True)
+        anomaly_table.drop(['anomaly_year', 'event_severe_prob'], axis=1, inplace=True)
 
-        X.drop(X.columns[0], axis=1, inplace=True)
-        X.drop(['anomaly_year', 'event_time', 'event_max_size', 'event_severe_prob'], axis=1, inplace=True)
+        lon_temp = pd.get_dummies(anomaly_table.event_lon, 'event_lon')
+        anomaly_table.drop('event_lon', axis=1, inplace=True)
+        anomaly_table = anomaly_table.join(lon_temp)
 
-        lon_temp = pd.get_dummies(X.event_lon, 'event_lon')
-        X.drop('event_lon', axis=1, inplace=True)
-        X = X.join(lon_temp)
+        lat_temp = pd.get_dummies(anomaly_table.event_lat, 'event_lat')
+        anomaly_table.drop('event_lat', axis=1, inplace=True)
+        anomaly_table = anomaly_table.join(lat_temp)
 
-        lat_temp = pd.get_dummies(X.event_lat, 'event_lat')
-        X.drop('event_lat', axis=1, inplace=True)
-        X = X.join(lat_temp)
-
-        X.anomaly_value = X.anomaly_value.apply(np.log)
-
-        legit = X.replace([np.inf, -np.inf], np.nan).dropna()
-
+        # anomaly_table.anomaly_value = anomaly_table.anomaly_value.apply(np.log)
+        legit = anomaly_table.replace([np.inf, -np.inf], np.nan).dropna()
         return legit
